@@ -1,0 +1,4 @@
+- what functionalities must be tested?
+- how to test it?
+- how to prove that the program terminate in any case?
+- how to prove that the program fits initial specification?
