@@ -11,18 +11,19 @@ import abstractSyntax.FunctionCall;
 import abstractSyntax.Statement;
 import abstractSyntax.Term;
 import abstractSyntax.Variable;
+import syntaxAnalysis.Scanner.Token;
 
 public class Parser {
 	
 	private Scanner scanner;
-	private Scanner.Type token;
+	private Token token;
 	
 	public Statement parse(Reader r) throws SyntaxException {
 		
 		scanner = new Scanner(r);
 		nextToken();
 		Statement stat = statement();
-		expect(Scanner.Type.EOF);
+		expect(Token.EOF);
 		
 		return stat;
 	}
@@ -32,13 +33,13 @@ public class Parser {
 		
 		Variable var = variable();
 		
-		expect(Scanner.Type.ASSIGN);
+		expect(Token.ASSIGN);
 		
 		Expression exp = expr();
 		
 		Statement stat = new Statement(var, exp);
 		
-		expect(Scanner.Type.SEMICOLUMN);
+		expect(Token.SEMICOLUMN);
 		
 		return stat;
 	}
@@ -48,7 +49,7 @@ public class Parser {
 		
 		Term term = term();
 		
-		if (token == Scanner.Type.PLUS) {	
+		if (token == Token.PLUS) {	
 			nextToken();
 			return new Expression(term, expr());	
 		}
@@ -61,7 +62,7 @@ public class Parser {
 		
 		Factor fact = factor();
 		
-		if (token == Scanner.Type.MULTIPLY) {
+		if (token == Token.MULTIPLY) {
 			nextToken();
 			return new Term(fact, term());
 		}
@@ -72,23 +73,26 @@ public class Parser {
 	// factor ::= ( expr ) | var | constant | call( fun, expr )
 	private Factor factor() throws SyntaxException {
 		
-		if (token == Scanner.Type.LEFT_PAREN) {
+		if (token == Token.LEFT_PAREN) {
 			
 			nextToken();
 			Expression exp = expr();
-			expect(Scanner.Type.RIGHT_PAREN);
+			expect(Token.RIGHT_PAREN);
 			
 			return new EnclosedBracketsExpression(exp);
 		}  
 		
-		if (token == Scanner.Type.VARIABLE) 
+		if (token == Token.VARIABLE) 
 			return variable();
 		
-		if (token == Scanner.Type.CONSTANT) 
+		if (token == Token.CONSTANT) 
 			return constant();
 		
-		if (token == Scanner.Type.CALL) 			
+		if (token == Token.CALL) {
+			
+			nextToken();
 			return functionCall();
+		}
 		
 		throw new SyntaxException("Unrecognized factor production, founded: " + token);
 	}
@@ -114,37 +118,43 @@ public class Parser {
 	// call(function, exp)
 	private Factor functionCall() throws SyntaxException {
 			
-		nextToken();
-		expect(Scanner.Type.LEFT_PAREN);
+		expect(Token.LEFT_PAREN);
 		
 		String functionName = null;
-		if (token == Scanner.Type.VARIABLE)
-			functionName = scanner.getString();
-		else 
-			expect(Scanner.Type.VARIABLE);
 		
-		nextToken();
-		expect(Scanner.Type.COMMA);
+		if (token == Token.VARIABLE) {
+
+			functionName = scanner.getString();
+			nextToken();			
+		} else 
+			throw new SyntaxException("Expected identifier as first argument " 
+									+ "of function call, founded: " + token);
+		
+		expect(Token.COMMA);
 		
 		Expression exp = expr();
 		
-		expect(Scanner.Type.RIGHT_PAREN);
+		expect(Token.RIGHT_PAREN);
 		
 		return new FunctionCall(functionName, exp);
 	}
 	
-	// expect: check if the current token is of type otherwise a SyntaxException exception is raised
-	private void expect(Scanner.Type t) throws SyntaxException {
-		if (token != t)
-			throw new SyntaxException(t, token);
+	/** expect
+	 *  check if the current token is of type otherwise a SyntaxException exception is raised 
+	**/
+	private void expect(Token expectedToken) throws SyntaxException {
+		
+		if (token != expectedToken)
+			throw new SyntaxException(expectedToken, token);
 		
 		nextToken();
 	}
 
-	// nextToken: read the next token from the scanner
-	private void nextToken() {
-		this.token = scanner.nextToken();
-	}
+	/** nextToken
+	 *  read the next token from the scanner 
+	**/
+	private void nextToken() { this.token = scanner.nextToken(); }
+	
 	
 	public static void main(String[] args) throws IOException, SyntaxException  {
 		

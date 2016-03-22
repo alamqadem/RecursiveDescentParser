@@ -5,10 +5,9 @@ import java.io.StreamTokenizer;
 
 public class Scanner {
 	
-	private StreamTokenizer input;
-	private Type lastToken;
+	private final StreamTokenizer input;
 	
-	public enum Type {
+	public enum Token {
 		INVALID_CHAR,
 		VARIABLE,
 		PLUS,
@@ -25,83 +24,74 @@ public class Scanner {
 		CONSTANT
 	}
 	
-	public Scanner(Reader r){
+	public Scanner(Reader r) { this.input = getInputAnalyzer(r); }
 	
-		this.input = new StreamTokenizer(r);
+	protected StreamTokenizer getInputAnalyzer(Reader reader) {
 		
-		input.resetSyntax();
-		input.eolIsSignificant(false);
-		input.wordChars('a', 'z');
-		input.wordChars('A', 'Z');
-		input.ordinaryChar('+');
-		input.ordinaryChar('*');
-		input.ordinaryChar('=');
-		input.ordinaryChar('(');
-		input.ordinaryChar(')');
-		input.ordinaryChar(';');
-		input.parseNumbers();
-		input.whitespaceChars(' ', ' ');
+		StreamTokenizer streamTokenizer = new StreamTokenizer(reader);
+		
+		streamTokenizer.resetSyntax();
+		streamTokenizer.eolIsSignificant(false);
+		streamTokenizer.wordChars('a', 'z');
+		streamTokenizer.wordChars('A', 'Z');
+		streamTokenizer.ordinaryChar('+');
+		streamTokenizer.ordinaryChar('*');
+		streamTokenizer.ordinaryChar('=');
+		streamTokenizer.ordinaryChar('(');
+		streamTokenizer.ordinaryChar(')');
+		streamTokenizer.ordinaryChar(';');
+		streamTokenizer.parseNumbers();
+		streamTokenizer.whitespaceChars(' ', ' ');
+		
+		return streamTokenizer;
 	}
 	
-	public Type nextToken() {
+	public Token nextToken() {
 		
 		try {
 			
 			switch(input.nextToken()) {
 			
-			case StreamTokenizer.TT_EOF:
-				
-				return Type.EOF;
-				
-			case StreamTokenizer.TT_WORD:
-				
-				if (input.sval.equals("false"))
-					return Type.FALSE;
-				else if (input.sval.equals("true"))
-					return Type.TRUE;
-				else if (input.sval.equals("call"))
-					return Type.CALL;
-				else
-					return Type.VARIABLE;
-				
-			case StreamTokenizer.TT_NUMBER:
-				return Type.CONSTANT;
-				
-			case '+':
-				return Type.PLUS;
-				
-			case '*':
-				return Type.MULTIPLY;
-				
-			case '=':
-				return Type.ASSIGN;
-				
-			case '(':
-				return Type.LEFT_PAREN;
-				
-			case ')':
-				return Type.RIGHT_PAREN;
-				
-			case ';':
-				return Type.SEMICOLUMN;
-				
-			case ',':
-				return Type.COMMA;
-				
-			default:
-				return Type.INVALID_CHAR;
+				case StreamTokenizer.TT_EOF: return Token.EOF;
+					
+				case StreamTokenizer.TT_WORD: return wordSelection(input.sval);
+					
+				case StreamTokenizer.TT_NUMBER: return Token.CONSTANT;
+					
+				case '+': return Token.PLUS;
+					
+				case '*': return Token.MULTIPLY;
+					
+				case '=': return Token.ASSIGN;
+					
+				case '(': return Token.LEFT_PAREN;
+					
+				case ')': return Token.RIGHT_PAREN;
+					
+				case ';': return Token.SEMICOLUMN;
+					
+				case ',': return Token.COMMA;
+					
+				default: return Token.INVALID_CHAR;
 			}
 			
-		} catch (IOException e) {
-			return Type.EOF;
-		}
+		} catch (IOException e) { return Token.EOF; }
 	}
 
-	public String getString() {
-		return input.sval;
+	private Token wordSelection(String tokenValue) {
+		
+		if (tokenValue == null) return Token.INVALID_CHAR;
+		
+		if (tokenValue.equals("false")) return Token.FALSE;
+		
+		if (tokenValue.equals("true")) return Token.TRUE;
+		
+		if (tokenValue.equals("call")) return Token.CALL;
+		
+		return Token.VARIABLE;
 	}
+
+	public String getString() { return input.sval; }
 	
-	public double getNumber() {
-		return input.nval;
-	}
+	public double getNumber() { return input.nval; }
 }

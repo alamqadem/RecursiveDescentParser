@@ -1,7 +1,8 @@
 package syntaxAnalysis;
 
-import syntaxAnalysis.Scanner.Type;
+import syntaxAnalysis.Scanner.Token;
 
+@SuppressWarnings("serial")
 public class SyntaxException extends Exception {
 	
 	private final String message;
@@ -10,7 +11,7 @@ public class SyntaxException extends Exception {
 		this.message = message;
 	}
 	
-	public SyntaxException(Type expected, Type founded) {		
+	public SyntaxException(Token expected, Token founded) {		
 		this.message = "expected " + expected + " instead of " + founded; 
 	}
 	

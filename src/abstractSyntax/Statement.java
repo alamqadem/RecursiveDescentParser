@@ -10,13 +10,9 @@ public class Statement {
 		this.expr = exp;
 	}
 	
-	public Variable getVariable() {
-		return var;
-	}
+	public Variable getVariable() { return var; }
 	
-	public Expression getExpression() {
-		return expr;
-	}
+	public Expression getExpression() { return expr; }
 	
 	@Override
 	public String toString() {
